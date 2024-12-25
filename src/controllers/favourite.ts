@@ -64,7 +64,7 @@ export const createFavorite = async (req: Request, res: Response) => {
   
   // 2. Get All Favorites for a User
   export const getAllFavorites = async (req: Request, res: Response) => {
-    const userId = req.body?.user_id; // Get authenticated user ID
+    const userId = parseInt(req.headers['user-id'] as string);// Get authenticated user ID
   
     try {
       if (!userId) {
