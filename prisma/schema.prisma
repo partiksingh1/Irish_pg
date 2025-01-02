@@ -12,7 +12,7 @@ generator client {
 model User {
   user_id        Int      @id @default(autoincrement())
   first_name     String
-  last_name      String
+  last_name      String?
   email          String   @unique
   password_hash  String
   role           Role
@@ -26,6 +26,8 @@ model User {
   properties    Property[]   @relation("UserProperties")
   inquiries     Inquiry[]    @relation("UserInquiries")
   favorites     Favorite[]   @relation("UserFavorites")
+  chats          UserChats[] @relation("UserChats")  // Many-to-many with Chat
+  messages       Message[]  @relation("UserMessages") // User's messages
 }
 enum Role {
   BUYER
@@ -121,3 +123,37 @@ model Favorite {
   @@unique([userId, propertyId]) // Add this line to create a composite unique constraint
 }
 
+model Chat {
+  id           String    @id
+  createdAt    DateTime  @default(now())
+  lastMessage  String?
+
+  // Relationship with Users through the UserChats join table
+  users        UserChats[] @relation("UserChats")
+  messages     Message[]   @relation("ChatMessages")
+
+  seenBy       Int[]      // Array of user IDs who have seen the messages
+}
+
+model UserChats {
+  userId     Int
+  chatId     String
+
+  // Relationships
+  user       User   @relation("UserChats", fields: [userId], references: [user_id], onDelete: Cascade)
+  chat       Chat   @relation("UserChats", fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@id([userId, chatId]) // Composite primary key to ensure uniqueness of the user-chat pair
+}
+
+model Message {
+  id           Int    @id @default(autoincrement())
+  text         String
+  userId       Int
+  chatId       String
+  createdAt    DateTime  @default(now())
+
+  // Relationships
+  chat         Chat      @relation("ChatMessages", fields: [chatId], references: [id])
+  user         User      @relation("UserMessages", fields: [userId], references: [user_id])
+}
